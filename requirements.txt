@@ -1,8 +1,6 @@
 
-streamlit==1.35.0
-langchain==0.2.1
-langchain-groq==0.1.5
-python-dotenv==1.0.1
-SpeechRecognition==3.10.4
-gTTS==2.5.1
-pygame==2.5.2
+streamlit
+langchain
+langchain-groq
+python-dotenv
+gTTS
