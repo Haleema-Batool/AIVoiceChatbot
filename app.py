@@ -1,61 +1,51 @@
 
+import streamlit as st
+from dotenv import load_dotenv
+import os
+from gtts import gTTS
+from langchain_groq import ChatGroq
+from langchain.schema import HumanMessage
+import tempfile
 
-# Get API key
+# Load API key
+load_dotenv()
+
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# Initialize Groq model
+# Groq model
 llm = ChatGroq(
     groq_api_key=GROQ_API_KEY,
     model_name="llama3-8b-8192"
-# Speech recognizer
-recognizer = sr.Recognizer()
-
-# Text-to-speech engine
-engine = pyttsx3.init()
+)
 
 # Streamlit UI
 st.title("AI Voice Chatbot")
-st.write("Speak with AI using LangChain + Groq")
+st.write("Chat with AI using LangChain + Groq")
 
-# Function to speak text
+# User input
+user_input = st.text_input("Type your message")
 
-def speak_text(text):
-    engine.say(text)
-    engine.runAndWait()
+if st.button("Send"):
 
-# Function to listen
+    if user_input:
 
-def listen_voice():
-    with sr.Microphone() as source:
-        st.info("Listening...")
-        recognizer.adjust_for_ambient_noise(source)
-        audio = recognizer.listen(source)
+        # AI response
+        response = llm.invoke([
+            HumanMessage(content=user_input)
+        ])
 
-    try:
-        text = recognizer.recognize_google(audio)
-        return text
+        ai_response = response.content
 
-    except sr.UnknownValueError:
-        return "Sorry, I could not understand."
+        st.write("AI:", ai_response)
 
-    except sr.RequestError:
-        return "Speech service error."
+        # Convert to voice
+        tts = gTTS(ai_response)
 
-# Button
-if st.button("Start Talking"):
+        # Save temporary mp3
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+            tts.save(fp.name)
 
-    user_text = listen_voice()
+            audio_file = open(fp.name, "rb")
+            audio_bytes = audio_file.read()
 
-    st.write("You:", user_text)
-
-    # Send to AI
-    response = llm.invoke([
-        HumanMessage(content=user_text)
-    ])
-
-    ai_response = response.content
-
-    st.write("AI:", ai_response)
-
-    # Speak AI response
-    speak_text(ai_response)
+            st.audio(audio_bytes, format="audio/mp3")
