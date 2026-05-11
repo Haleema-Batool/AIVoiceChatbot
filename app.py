@@ -10,46 +10,66 @@ import tempfile
 # Load environment variables
 load_dotenv()
 
-# Get API key
+# Get Groq API key
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# Initialize model
-llm = ChatGroq(
-    groq_api_key=GROQ_API_KEY,
-    model_name="llama3-8b-8192"
-)
+# Check API key
+if not GROQ_API_KEY:
+    st.error("Groq API key not found. Please check your .env file or Streamlit Secrets.")
+    st.stop()
+
+# Initialize Groq model
+try:
+    llm = ChatGroq(
+        api_key=GROQ_API_KEY,
+        model="llama3-8b-8192"
+    )
+except Exception as e:
+    st.error(f"Error initializing Groq model: {e}")
+    st.stop()
 
 # Streamlit UI
+st.set_page_config(page_title="AI Voice Chatbot")
+
 st.title("AI Voice Chatbot")
-st.write("LangChain + Groq Voice Assistant")
+st.write("LangChain + Groq + Streamlit")
 
 # User input
-user_input = st.text_input("Enter your message")
+user_input = st.text_input("Type your message")
 
+# Send button
 if st.button("Send"):
 
-    if user_input:
+    if user_input.strip() == "":
+        st.warning("Please enter a message.")
 
-        # Send message to AI
-        response = llm.invoke([
-            HumanMessage(content=user_input)
-        ])
+    else:
 
-        ai_response = response.content
+        try:
+            # Send message to AI
+            response = llm.invoke([
+                HumanMessage(content=user_input)
+            ])
 
-        # Show response
-        st.write("AI:", ai_response)
+            ai_response = response.content
 
-        # Convert text to speech
-        tts = gTTS(text=ai_response, lang="en")
+            # Display AI response
+            st.success(ai_response)
 
-        # Save temporary mp3
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+            # Convert text to speech
+            tts = gTTS(text=ai_response, lang="en")
 
-            tts.save(fp.name)
+            # Save temporary mp3
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
 
-            audio_file = open(fp.name, "rb")
+                tts.save(fp.name)
 
-            audio_bytes = audio_file.read()
+                # Read audio file
+                audio_file = open(fp.name, "rb")
+                audio_bytes = audio_file.read()
 
-            st.audio(audio_bytes, format="audio/mp3")
+                # Play audio
+                st.audio(audio_bytes, format="audio/mp3")
+
+        except Exception as e:
+            st.error(f"Error: {e}")
