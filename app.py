@@ -10,29 +10,27 @@ import tempfile
 # Load environment variables
 load_dotenv()
 
-# Get Groq API key
+# Get API key
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # Check API key
 if not GROQ_API_KEY:
-    st.error("Groq API key not found. Please check your .env file or Streamlit Secrets.")
+    st.error("Groq API key not found")
     st.stop()
 
 # Initialize Groq model
-try:
-    llm = ChatGroq(
-        api_key=GROQ_API_KEY,
-        model_name="llama3-8b-8192"
-    )
-except Exception as e:
-    st.error(f"Error initializing Groq model: {e}")
-    st.stop()
+llm = ChatGroq(
+    groq_api_key=GROQ_API_KEY,
+    model_name="llama-3.3-70b-versatile"
+)
 
-# Streamlit UI
+# Streamlit page
 st.set_page_config(page_title="AI Voice Chatbot")
 
+# Title
 st.title("AI Voice Chatbot")
-st.write("LangChain + Groq + Streamlit")
+
+st.write("LangChain + Groq + Voice AI")
 
 # User input
 user_input = st.text_input("Type your message")
@@ -40,32 +38,29 @@ user_input = st.text_input("Type your message")
 # Send button
 if st.button("Send"):
 
-    if user_input.strip() == "":
-        st.warning("Please enter a message.")
-
-    else:
+    if user_input.strip() != "":
 
         try:
-            # Send message to AI
+            # AI response
             response = llm.invoke([
                 HumanMessage(content=user_input)
             ])
 
             ai_response = response.content
 
-            # Display AI response
+            # Display response
             st.success(ai_response)
 
             # Convert text to speech
             tts = gTTS(text=ai_response, lang="en")
 
-            # Save temporary mp3
+            # Save audio
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
 
                 tts.save(fp.name)
 
-                # Read audio file
                 audio_file = open(fp.name, "rb")
+
                 audio_bytes = audio_file.read()
 
                 # Play audio
