@@ -22,7 +22,7 @@ if not GROQ_API_KEY:
 try:
     llm = ChatGroq(
         api_key=GROQ_API_KEY,
-        model="llama3-8b-8192"
+        model_name="llama3-8b-8192"
     )
 except Exception as e:
     st.error(f"Error initializing Groq model: {e}")
