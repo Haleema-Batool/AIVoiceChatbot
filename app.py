@@ -7,12 +7,13 @@ from langchain_groq import ChatGroq
 from langchain.schema import HumanMessage
 import tempfile
 
-# Load API key
+# Load environment variables
 load_dotenv()
 
+# API key
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# Groq model
+# AI model
 llm = ChatGroq(
     groq_api_key=GROQ_API_KEY,
     model_name="llama3-8b-8192"
@@ -20,10 +21,10 @@ llm = ChatGroq(
 
 # Streamlit UI
 st.title("AI Voice Chatbot")
-st.write("Chat with AI using LangChain + Groq")
+st.write("LangChain + Groq AI")
 
 # User input
-user_input = st.text_input("Type your message")
+user_input = st.text_input("Enter your message")
 
 if st.button("Send"):
 
@@ -36,16 +37,19 @@ if st.button("Send"):
 
         ai_response = response.content
 
+        # Show response
         st.write("AI:", ai_response)
 
-        # Convert to voice
-        tts = gTTS(ai_response)
+        # Convert text to speech
+        tts = gTTS(text=ai_response, lang='en')
 
-        # Save temporary mp3
+        # Save temporary audio
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+
             tts.save(fp.name)
 
             audio_file = open(fp.name, "rb")
+
             audio_bytes = audio_file.read()
 
             st.audio(audio_bytes, format="audio/mp3")
